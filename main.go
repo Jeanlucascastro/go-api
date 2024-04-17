@@ -3,7 +3,8 @@ package main
 import (
 	"go-api/model"
 	"log"
-	"net/http"
+
+	"go-api/controller"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
@@ -21,29 +22,10 @@ func main() {
 
 	r := gin.Default()
 
-	r.POST("/order", func(c *gin.Context) {
-		var order model.Order
-		if err := c.BindJSON(&order); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
+		r.POST("/order", controller.SaveOrder(db))
+		r.GET("/orders", controller.GetOrders(db))
 
-		if err := db.Create(&order).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"message": "Pedido Salvo", "order_id": order.ID})
-	})
-
-	r.GET("/orders", func(c *gin.Context) {
-		var orders []model.Order
-		if err := db.Preload("Item").Find(&orders).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, orders)
-	})
+		r.GET("/items", controller.GetItems(db))
 
 	log.Fatal(r.Run(":8080"))
 }
