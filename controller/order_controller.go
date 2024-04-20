@@ -16,34 +16,33 @@ func SaveOrder(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		for _, item := range order.Item {
-			if err := db.Create(&item).Error; err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
+		var items []model.Item
+		if err := db.Find(&items, order.ItemIDs).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
 		}
 
-		order.ItemIDs = make([]uint, len(order.Item))
-		for i, item := range order.Item {
-			order.ItemIDs[i] = item.ID
-		}
+		print("items ", items[0].Name)
+		order.Item = items
 
 		if err := db.Create(&order).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		c.JSON(http.StatusOK, gin.H{"message": "Pedido Salvo", "order_id": order.ID})
+		c.JSON(http.StatusOK, order)
 	}
 }
 
 func GetOrders(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var orders []model.Order
-		if err := db.Find(&orders).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, orders)
-	}
+  return func(c *gin.Context) {
+    var orders []model.Order
+    // Include related items using Preload or Joins
+    if err := db.Preload("Item").Find(&orders).Error; err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+      return
+    }
+
+    c.JSON(http.StatusOK, orders)
+  }
 }
