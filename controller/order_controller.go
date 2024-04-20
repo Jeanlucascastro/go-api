@@ -38,7 +38,6 @@ func SaveOrder(db *gorm.DB) gin.HandlerFunc {
 func GetOrders(db *gorm.DB) gin.HandlerFunc {
   return func(c *gin.Context) {
     var orders []model.Order
-    // Include related items using Preload or Joins
     if err := db.Preload("Item").Find(&orders).Error; err != nil {
       c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
       return
