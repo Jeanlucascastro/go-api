@@ -24,6 +24,7 @@ func main() {
 
 		r.POST("/order", controller.SaveOrder(db))
 		r.GET("/orders", controller.GetOrders(db))
+		r.GET("/orders/:order_id", controller.GetOrdersById(db))
 
 		r.GET("/items", controller.GetItems(db))
 

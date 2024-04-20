@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"go-api/model"
 	"net/http"
 
@@ -45,4 +46,28 @@ func GetOrders(db *gorm.DB) gin.HandlerFunc {
 
     c.JSON(http.StatusOK, orders)
   }
+}
+
+func GetOrdersById(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+			orderId := c.Param("order_id")
+
+			if orderId == "" {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Missing order ID in request parameter"})
+					return
+			}
+
+			var order model.Order
+			if err := db.Preload("Item").Where("id = ?", orderId).First(&order).Error; err != nil {
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+							c.JSON(http.StatusNotFound, gin.H{"error": "Order with ID " + orderId + " not found"})
+					} else {
+							c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					}
+					return
+			}
+
+			c.JSON(http.StatusOK, order)
+	}
 }
